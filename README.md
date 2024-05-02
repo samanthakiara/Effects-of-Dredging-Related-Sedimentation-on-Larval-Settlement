@@ -4,6 +4,8 @@ data.csv: raw data used for statistical analysis in Thesis Code.Rmd
 
 Thesis Code.Rmd: code for thesis work on the effects of dredging-related sedimentation on coral larvae
 
+
+
 This code includes data cleaning, and statistical analyses for each larval response (settled, partially metamorphosed, swimming, and dead).  For each larval response there is a series of model validation tests to determine the best model fit to the data, including a deviance goodness-of-fit test, and anova chi sq tests comparing full and reduced models, and with or without log transformed concentration.  Residual plots were used as a final checkpoint to determine the best model for each response.    
 
 Model predictions were plotted for each larval response, and used to interpret the model summaries for each larval response to sediment (Table 6, Figure 6 in this thesis).  
