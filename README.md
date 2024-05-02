@@ -11,8 +11,6 @@ This code includes data cleaning, and statistical analyses for each larval respo
 
 Model predictions were plotted for each larval response, and used to interpret the model summaries for each larval response to sediment (Table 6, Figure 6 in this thesis).  
 
-Since there was a significant effect of sediment on larval settlement, and the model included log-transformed concentration, the model output was backtransformed to quanitfy the effect of a one-unit and ten-unit increase in sediment on larval settlement.  
-
 Since the GLM for partial metamorphosis did not perform well, the raw data was plotted and interpreted instead (Figure 8).  
 
 Table 3, 4, and 5 from this thesis were created in excel and used to generate Figure 4 and Figure 5.  Table 7 was created in excel and used to generate Figure 7.  
