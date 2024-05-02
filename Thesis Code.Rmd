@@ -3,7 +3,9 @@ title: Effects of Dredging Related Sedimentation on Larval Settlement in Harbor 
   Coral CODE
 author: "Sami"
 date: "2024-05-01"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +23,7 @@ data <- read.csv("~/Desktop/sediment_settlement_experiment/data/data.csv", heade
 
 ```
 
-# Data Exploration
+# Data Cleaning
 
 ## Defining Data Frame
 ```{r, echo=FALSE, warning=FALSE}
@@ -99,7 +101,7 @@ scatter.smooth(data$Trial, rstandard(mod3, type='deviance'), col='gray')
 scatter.smooth(predict(mod4, type='response'), rstandard(mod4, type='deviance'), col='gray')
 scatter.smooth(predict(mod4), resid(mod4, type='working'), col='gray')
 scatter.smooth(data$Treatment, rstandard(mod4, type='deviance'), col='gray')
-scatter.smooth(data$Trial, rstandard(mod4, type='deviance'), col='gray') #reminder: Trial not in mod4
+scatter.smooth(data$Trial, rstandard(mod4, type='deviance'), col='gray')
 
 ```
 
@@ -133,9 +135,14 @@ settle_plot <- ggplot(mod3_eff, aes(x = logConc, y = fit)) +
   ) +
   theme_minimal()
 
+#Model summary
+summary(mod3)
+
 ```
 
 ## Interpreting Results
+
+There is a significant decrease in larval settlement as sediment concentration increases.  Since sediment concentrations were log-transformed in the model, let's back-transform the model output to quantify the effect of sediment on settlement.  
 
 If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a multiplicative change in the odds of k^beta-1. Given this general formula, below are two ways to interpret the results:
 
@@ -154,7 +161,7 @@ conf_intervals <- confint(mod3, level = 0.95)
 coefficients <- coef(mod3)
 
 # Back-transform the coefficients and confidence intervals
-exp_coefficients <- exp(coefficients) - 0.0001 #remember log(sami$Conc+0.0001), so need to subtract
+exp_coefficients <- exp(coefficients) - 0.0001 
 exp_conf_intervals <- exp(conf_intervals) - 0.0001
 
 # Extract p-values from the model summary
@@ -214,7 +221,7 @@ For every ten unit increase in sediment concentration, the estimated odds of a l
 ## GLM Model Validation
 
 ```{r, echo=FALSE}
-# Start with full, binomial model (log-transformed?)
+# Start with full, binomial model
 mod1meta <- glm(meta_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
 summary(mod1meta)
@@ -288,7 +295,6 @@ custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 pm_plot <- ggplot(mod3meta_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
-#  geom_point(data = sami, aes(x = logConc, y = P_settle), color = "red", shape = 16) +
   labs(x = bquote(Sediment~Concentration~(mg/cm^2)), y = "Proportion partially metamorphosed") +
   scale_x_continuous(
     breaks = log(custom_ticks),
@@ -328,7 +334,7 @@ meta_plot <- ggplot(data, aes(x = logConc, y = meta_prop)) +
 ## GLM Model Validation
 
 ```{r, echo=FALSE}
-# Start with full, binomial model (log-transformed?)
+# Start with full, binomial model
 mod1swim <- glm(swim_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
 summary(mod1swim)
@@ -402,7 +408,6 @@ custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 swim_plot <- ggplot(mod3swim_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
-#  geom_point(data = sami, aes(x = logConc, y = P_settle), color = "red", shape = 16) +
   labs(x = bquote(Sediment~Concentration~(mg/cm^2)), y = "Rate of Larval Swimming (%)") +
   scale_x_continuous(
     breaks = log(custom_ticks),
@@ -467,30 +472,33 @@ anova(mod5dead, mod3dead, test = "Chisq")
  Based on the Chi sq test, mod4 and mod5 are sufficient, but since this deviates from the models for the previous larval responses, let's take a look at the residuals for mod2, mod3, mod4 and mod5.  
 
 ```{r, echo=FALSE, warning=FALSE}
-#Residual plots for mod3
+#Residual plots for mod4
 par(mfrow=c(2,2))
 scatter.smooth(predict(mod4dead, type='response'), rstandard(mod4dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod4dead), resid(mod4dead, type='working'), col='gray')
 scatter.smooth(data$Treatment, rstandard(mod4dead, type='deviance'), col='gray')
 scatter.smooth(data$Trial, rstandard(mod4dead, type='deviance'), col='gray') #note Trial not in mod5
 
-#Residual plots for mod4
+#Residual plots for mod5
 scatter.smooth(predict(mod5dead, type='response'), rstandard(mod5dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod5dead), resid(mod5dead, type='working'), col='gray')
 scatter.smooth(data$logConc, rstandard(mod5dead, type='deviance'), col='gray')
 scatter.smooth(data$Trial, rstandard(mod5dead, type='deviance'), col='gray') #note: Trial not in mod5
 
+#Residual plots for mod3
 scatter.smooth(predict(mod3dead, type='response'), rstandard(mod3dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod3dead), resid(mod3dead, type='working'), col='gray')
 scatter.smooth(data$logConc, rstandard(mod3dead, type='deviance'), col='gray')
 scatter.smooth(data$Trial, rstandard(mod3dead, type='deviance'), col='gray') 
 
+#Residual plots for mod2
 scatter.smooth(predict(mod2dead, type='response'), rstandard(mod2dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod2dead), resid(mod2dead, type='working'), col='gray')
 scatter.smooth(data$logConc, rstandard(mod2dead, type='deviance'), col='gray')
 scatter.smooth(data$Trial, rstandard(mod2dead, type='deviance'), col='gray') #note: Trial not in mod2
 
 ```
+
 The residual plots for mod3 look better, and to keep models consistent across response types, let's look at the response as a function of log-transformed concentration.  
 
 
@@ -507,7 +515,6 @@ custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 dead_plot <- ggplot(mod3dead_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
-#  geom_point(data = sami, aes(x = logConc, y = P_settle), color = "red", shape = 16) +
   labs(x = bquote(Sediment~Concentration~(mg/cm^2)), y = "Larval Mortality Rate (%)") +
   scale_x_continuous(
     breaks = log(custom_ticks),
