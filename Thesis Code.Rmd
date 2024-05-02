@@ -18,15 +18,19 @@ library(lmtest)
 library(statmod)
 library(plyr)
 
+```
+
+
+```{r, echo = TRUE}
 #Modify location as needed
-data <- read.csv("~/Desktop/sediment_settlement_experiment/data/data.csv", header = TRUE)
+data <- read.csv("./data.csv", header = TRUE)
 
 ```
 
 # Data Cleaning
 
-## Defining Data Frame
-```{r, echo=FALSE, warning=FALSE}
+### Defining Data Frame
+```{r, echo=TRUE, warning=FALSE}
 #Look at data
 head(data)
 
@@ -46,8 +50,8 @@ head(data)
 
 # Response: Settlement
   
-## GLM Model Validation
-```{r, echo=FALSE}
+### GLM Model Validation
+```{r, echo=TRUE}
 # Start with full, binomial model
 mod1 <- glm(settle_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
@@ -71,7 +75,7 @@ print(paste("P-value:", p_value))
 
 Since there is evidence of overdispersion (p<0.05 in deviance goodness-of-fit test), let's make this a quasibinomial model and compare the fit/performance of several versions: full or reduced, and with or without log transformed concentration.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 mod2 <- glm(settle_prop ~ Treatment + Trial, family = quasibinomial, weights = total_larvae,
             data = data)
 mod3 <- glm(settle_prop ~ logConc + Trial, family = quasibinomial, weights = total_larvae,
@@ -89,7 +93,7 @@ anova(mod5, mod3, test = "Chisq")
 
 Now let's compare the model residuals for mod3 and mod4, the two preferred models in the Chi-sq (anova) tests above.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #Residual plots for mod3
 par(mfrow=c(2,2))
 scatter.smooth(predict(mod3, type='response'), rstandard(mod3, type='deviance'), col='gray')
@@ -109,8 +113,8 @@ The residual plots look much cleaner for mod3 (~ logConc + Trial) than for mod4 
 
 Now let's try to plot the model predictions.
 
-## GLM Prediction Plots
-```{r, echo=FALSE, warning=FALSE}
+### GLM Prediction Plots
+```{r, echo=TRUE, warning=FALSE}
 # Model predictions
 mod3_eff <- effect("logConc", mod3)
 mod3_eff <- as.data.frame(mod3_eff)
@@ -140,7 +144,7 @@ summary(mod3)
 
 ```
 
-## Interpreting Results
+### Interpreting Results
 
 There is a significant decrease in larval settlement as sediment concentration increases.  Since sediment concentrations were log-transformed in the model, let's back-transform the model output to quantify the effect of sediment on settlement.  
 
@@ -151,7 +155,7 @@ If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a 
 
 Let's start with a one unit increase in concentration...
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a multiplicative change in the odds of k^beta-1.
 
 # Extract 95% confidence intervals for the coefficients
@@ -189,7 +193,7 @@ The estimated odds of a larva settling decrease by 16.7% for every one unit incr
 
 Now, let's find out what the change is for every ten unit increase in concentration...
   
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a multiplicative change in the odds of k^beta-1.
 
 # Back-transform the coefficients and confidence intervals
@@ -218,9 +222,9 @@ For every ten unit increase in sediment concentration, the estimated odds of a l
 
 # Response: Partially metamorphosed
   
-## GLM Model Validation
+### GLM Model Validation
 
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 # Start with full, binomial model
 mod1meta <- glm(meta_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
@@ -244,7 +248,7 @@ print(paste("P-value:", p_value_meta))
 
 There is no evidence of overdispersion with the binomial, so I will keep the binomial.
   
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 mod2meta <- glm(meta_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
 mod3meta <- glm(meta_prop ~ logConc + Trial, family = binomial, weights = total_larvae,
@@ -262,7 +266,7 @@ anova(mod5meta, mod3meta, test = "Chisq")
 
 Based on the Chi sq test, mod2 and mod3 are preferred.  Let's plot the residuals.  
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #Residual plots for mod2
 par(mfrow=c(2,2))
 scatter.smooth(predict(mod2meta, type='response'), rstandard(mod2meta, type='deviance'), col='gray')
@@ -280,9 +284,9 @@ scatter.smooth(data$Trial, rstandard(mod3meta, type='deviance'), col='gray')
 
 The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Conc + Trial), so let's look at the response as a function of log-transformed concentration.  
 
-## GLM Prediction Plots
+### GLM Prediction Plots
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 # Model predictions
 mod3meta_eff <- effect("logConc", mod3meta)
 mod3meta_eff <- as.data.frame(mod3meta_eff)
@@ -308,7 +312,7 @@ pm_plot <- ggplot(mod3meta_eff, aes(x = logConc, y = fit)) +
 
 ```
 
-# Interpreting results 
+### Interpreting results 
 The model has wide confidence intervals and the predicted values are consistently different from the actual values. Instead, let's visualize the raw data for partial metamorphosis.
 
 ```{r}
@@ -331,9 +335,9 @@ meta_plot <- ggplot(data, aes(x = logConc, y = meta_prop)) +
 
 # Response: Swimming
   
-## GLM Model Validation
+### GLM Model Validation
 
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 # Start with full, binomial model
 mod1swim <- glm(swim_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
@@ -357,7 +361,7 @@ print(paste("P-value:", p_value_swim))
 
 There is evidence of overdispersion (p < 0.05) so let's change this to a quasibinomial distribution.  
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 mod2swim <- glm(swim_prop ~ Treatment + Trial, family = quasibinomial, weights = total_larvae,
             data = data)
 mod3swim <- glm(swim_prop ~ logConc + Trial, family = quasibinomial, weights = total_larvae,
@@ -375,7 +379,7 @@ anova(mod5swim, mod3swim, test = "Chisq")
 
 Based on the Chi sq test, mod2 and mod3 are preferred.  Let's plot the residuals.  
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #Residual plots for mod2
 par(mfrow=c(2,2))
 scatter.smooth(predict(mod2swim, type='response'), rstandard(mod2swim, type='deviance'), col='gray')
@@ -393,9 +397,9 @@ scatter.smooth(data$Trial, rstandard(mod3swim, type='deviance'), col='gray')
 
 The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Conc + Trial), so let's look at the response as a function of log-transformed concentration.  
 
-## GLM Prediction Plots
+### GLM Prediction Plots
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 # Model predictions
 mod3swim_eff <- effect("logConc", mod3swim)
 mod3swim_eff <- as.data.frame(mod3swim_eff)
@@ -422,14 +426,14 @@ swim_plot <- ggplot(mod3swim_eff, aes(x = logConc, y = fit)) +
 
 ```
 
-# Interpreting results 
+### Interpreting results 
 The estimated odds of a larva swimming was unaffected by sediment concentration (GLM p > 0.05).
 
 # Response: Mortality
   
-## GLM Model Validation
+### GLM Model Validation
 
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 # Start with full, binomial model (log-transformed?)
 mod1dead <- glm(dead_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
@@ -453,7 +457,7 @@ print(paste("P-value:", p_value_dead))
 
 There is evidence of overdispersion (p < 0.05) so let's change this to a quasibinomial distribution.  
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 mod2dead <- glm(dead_prop ~ Treatment + Trial, family = quasibinomial, weights = total_larvae,
             data = data)
 mod3dead <- glm(dead_prop ~ logConc + Trial, family = quasibinomial, weights = total_larvae,
@@ -471,7 +475,7 @@ anova(mod5dead, mod3dead, test = "Chisq")
 
  Based on the Chi sq test, mod4 and mod5 are sufficient, but since this deviates from the models for the previous larval responses, let's take a look at the residuals for mod2, mod3, mod4 and mod5.  
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 #Residual plots for mod4
 par(mfrow=c(2,2))
 scatter.smooth(predict(mod4dead, type='response'), rstandard(mod4dead, type='deviance'), col='gray')
@@ -502,7 +506,7 @@ scatter.smooth(data$Trial, rstandard(mod2dead, type='deviance'), col='gray') #no
 The residual plots for mod3 look better, and to keep models consistent across response types, let's look at the response as a function of log-transformed concentration.  
 
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE}
 # Model predictions
 mod3dead_eff <- effect("logConc", mod3dead)
 mod3dead_eff <- as.data.frame(mod3dead_eff)
@@ -529,6 +533,6 @@ dead_plot <- ggplot(mod3dead_eff, aes(x = logConc, y = fit)) +
 
 ```
 
-# Interpreting results 
+### Interpreting results 
 The estimated odds of a larva dying was unaffected by sediment concentration (GLM p > 0.05).
 
