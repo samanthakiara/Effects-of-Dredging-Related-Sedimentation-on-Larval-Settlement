@@ -1,10 +1,10 @@
 # Effects of Dredging-Related Sedimentation on Larval Settlement
 
-data.csv: raw data used for statistical analysis in Thesis Code.Rmd
+data.csv: raw data used for statistical analysis in Code.Rmd
 
-Thesis Code.Rmd: code for thesis work on the effects of dredging-related sedimentation on coral larvae
+Code.Rmd: code for thesis work on the effects of dredging-related sedimentation on coral larvae
 
-Thesis-Code.html: code with formatted output for easy viewing
+Summary.html: code with formatted output based on Code.Rmd for easy viewing
 
 
 This code includes data cleaning, and statistical analyses for each larval response (settled, partially metamorphosed, swimming, and dead).  For each larval response there is a series of model validation tests to determine the best model fit to the data, including a deviance goodness-of-fit test, and anova chi sq tests comparing full and reduced models, and with or without log transformed concentration.  Residual plots were used as a final checkpoint to determine the best model for each response.    
