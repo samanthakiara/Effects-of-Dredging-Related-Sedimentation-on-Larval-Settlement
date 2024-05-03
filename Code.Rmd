@@ -73,7 +73,7 @@ print(paste("P-value:", p_value))
 
 ```
 
-Since there is evidence of overdispersion (p<0.05 in deviance goodness-of-fit test), let's make this a quasibinomial model and compare the fit/performance of several versions: full or reduced, and with or without log transformed concentration.
+Since there is evidence of overdispersion (p<0.05 in deviance goodness-of-fit test), let's make this a quasibinomial model and compare the fit/performance of full or reduced models, and with or without log transformed concentration.
 
 ```{r, echo=TRUE, warning=FALSE}
 mod2 <- glm(settle_prop ~ Treatment + Trial, family = quasibinomial, weights = total_larvae,
@@ -85,13 +85,13 @@ mod4 <- glm(settle_prop ~ Treatment, family = quasibinomial, weights = total_lar
 mod5 <- glm(settle_prop ~ logConc, family = quasibinomial, weights = total_larvae,
             data = data)
 
-# Compare full vs reduced models, first between non-log transformed and then between log transformed
+# Compare full vs reduced models
 anova(mod4, mod2, test = "Chisq")
 anova(mod5, mod3, test = "Chisq") 
 
 ```
 
-Now let's compare the model residuals for mod3 and mod4, the two preferred models in the Chi-sq (anova) tests above.
+Now let's compare the model residuals for the two preferred models in the Chi-sq (anova) tests above: mod3 and mod4.  
 
 ```{r, echo=TRUE, warning=FALSE}
 #Residual plots for mod3
@@ -109,7 +109,7 @@ scatter.smooth(data$Trial, rstandard(mod4, type='deviance'), col='gray')
 
 ```
 
-The residual plots look much cleaner for mod3 (~ logConc + Trial) than for mod4 (~ Conc), and it makes sense to look at the response as a function of log-transformed concentration given the concentration values: 0, 0.5, 1, 10, 25, and 50.
+The residual plots look cleaner for mod3 than for mod4, and it makes sense to look at the response as a function of log-transformed concentration given the concentration values(0, 0.5, 1, 10, 25, and 50).
 
 Now let's try to plot the model predictions.
 
@@ -119,7 +119,7 @@ Now let's try to plot the model predictions.
 mod3_eff <- effect("logConc", mod3)
 mod3_eff <- as.data.frame(mod3_eff)
 
-# Custom ticks and labels 
+# Custom ticks and labels since x-axis is log-transformed
 custom_ticks <- c(0.000125, 0.5, 1, 10, 25, 50)  
 custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 
@@ -139,7 +139,7 @@ settle_plot <- ggplot(mod3_eff, aes(x = logConc, y = fit)) +
   ) +
   theme_minimal()
 
-#Model summary
+#Print model summary
 summary(mod3)
 
 ```
@@ -156,12 +156,9 @@ If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a 
 Let's start with a one unit increase in concentration...
 
 ```{r, echo=TRUE, warning=FALSE}
-#If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a multiplicative change in the odds of k^beta-1.
 
-# Extract 95% confidence intervals for the coefficients
+# Extract 95% confidence intervals for the coefficients and coefficient estimates
 conf_intervals <- confint(mod3, level = 0.95)
-
-# Extract coefficient estimates
 coefficients <- coef(mod3)
 
 # Back-transform the coefficients and confidence intervals
@@ -169,22 +166,20 @@ exp_coefficients <- exp(coefficients) - 0.0001
 exp_conf_intervals <- exp(conf_intervals) - 0.0001
 
 # Extract p-values from the model summary
-p_values <- round(summary(mod3)$coefficients[, 4], digits = 3)  # Column 4 contains p-values
+p_values <- round(summary(mod3)$coefficients[, 4], digits = 3)
 
-# Create a data frame with back-transformed estimates, confidence intervals, and p-values
-estimates <- cbind(exp_coefficients, exp_conf_intervals, p_values)
 
 # Print the estimates
+estimates <- cbind(exp_coefficients, exp_conf_intervals, p_values)
 print(estimates)
 
-# Because these estimates are less than one, let's subtract from 1 to get the % decrease.
+# Calculate the % decrease.
 dec_exp_coefficients <- round(1 - (exp(coefficients) - 0.0001), digits = 3)
 dec_exp_conf_intervals <- round(1 - (exp(conf_intervals) - 0.0001), digits = 3)
 
-# Create another data frame with estimates of percent/proportion decline, associated confidence intervals, and p-values
-estimates2 <- cbind(dec_exp_coefficients, dec_exp_conf_intervals, p_values)
 
 # Print the estimates
+estimates2 <- cbind(dec_exp_coefficients, dec_exp_conf_intervals, p_values)
 print(estimates2)
 
 ```
@@ -194,26 +189,22 @@ The estimated odds of a larva settling decrease by 16.7% for every one unit incr
 Now, let's find out what the change is for every ten unit increase in concentration...
   
 ```{r, echo=TRUE, warning=FALSE}
-#If logit(pi) = beta0 + beta1*log(X), then a k-fold change in X corresponds to a multiplicative change in the odds of k^beta-1.
-
 # Back-transform the coefficients and confidence intervals
 ten_coefficients <- round(exp(10*coefficients) - 0.0001, digits = 3)
 ten_conf_intervals <- round(exp(10*conf_intervals) - 0.0001, digits = 3)
 
-# Create a data frame with back-transformed estimates, confidence intervals, and p-values
-ten_estimates <- cbind(ten_coefficients, ten_conf_intervals, p_values)
 
 # Print the estimates
+ten_estimates <- cbind(ten_coefficients, ten_conf_intervals, p_values)
 print(ten_estimates)
 
-# Because these estimates are less than one, let's subtract from 1 to get the % decrease.
+# Calculate the % decrease.
 dec_ten_coefficients <- round(1 - (exp(10*coefficients) - 0.0001), digits = 3)
 dec_ten_conf_intervals <- round(1 - (exp(10*conf_intervals) - 0.0001), digits = 3)
 
-# Create another data frame with estimates of percent/proportion decline, associated confidence intervals, and p-values
-ten_estimates2 <- cbind(dec_ten_coefficients, dec_ten_conf_intervals, p_values)
 
 # Print the estimates
+ten_estimates2 <- cbind(dec_ten_coefficients, dec_ten_conf_intervals, p_values)
 print(ten_estimates2)
 
 ```
@@ -230,13 +221,9 @@ mod1meta <- glm(meta_prop ~ Treatment + Trial, family = binomial, weights = tota
             data = data)
 summary(mod1meta)
 
-# Extract residual deviance
+# Test for Overdispersion
 residual_deviance_meta <- deviance(mod1meta)
-
-# Degrees of freedom
 df_meta <- nrow(model.matrix(mod1meta)) - length(coefficients(mod1meta))
-
-# Compute p-value to test for overdispersion
 p_value_meta <- 1 - pchisq(residual_deviance_meta, df)
 
 # Print results
@@ -258,7 +245,7 @@ mod4meta <- glm(meta_prop ~ Treatment, family = binomial, weights = total_larvae
 mod5meta <- glm(meta_prop ~ logConc, family = binomial, weights = total_larvae,
             data = data)
 
-# Compare full vs reduced models, first between non-log transformed and then between log transformed
+# Compare full vs reduced models, with and without log-transformed concentration
 anova(mod4meta, mod2meta, test = "Chisq") 
 anova(mod5meta, mod3meta, test = "Chisq") 
 
@@ -282,7 +269,7 @@ scatter.smooth(data$Trial, rstandard(mod3meta, type='deviance'), col='gray')
 
 ```
 
-The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Conc + Trial), so let's look at the response as a function of log-transformed concentration.  
+The residual plots look cleaner for mod3 than for mod2, so let's look at the response as a function of log-transformed concentration.  
 
 ### GLM Prediction Plots
 
@@ -291,11 +278,11 @@ The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Co
 mod3meta_eff <- effect("logConc", mod3meta)
 mod3meta_eff <- as.data.frame(mod3meta_eff)
 
-# Custom ticks and labels
+# Custom ticks and labels (since x-axis is log-transformed)
 custom_ticks <- c(0.000125, 0.5, 1, 10, 25, 50)
 custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 
-# Plot using ggplot2 with natural log-scaled x-axis, custom ticks, and labels
+# Plot using ggplot2
 pm_plot <- ggplot(mod3meta_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
@@ -343,13 +330,9 @@ mod1swim <- glm(swim_prop ~ Treatment + Trial, family = binomial, weights = tota
             data = data)
 summary(mod1swim)
 
-# Extract residual deviance
+# Test for Overdispersion
 residual_deviance_swim <- deviance(mod1swim)
-
-# Degrees of freedom
 df_swim <- nrow(model.matrix(mod1swim)) - length(coefficients(mod1swim))
-
-# Compute p-value to test for overdispersion
 p_value_swim <- 1 - pchisq(residual_deviance_swim, df)
 
 # Print results
@@ -371,7 +354,7 @@ mod4swim <- glm(swim_prop ~ Treatment, family = quasibinomial, weights = total_l
 mod5swim <- glm(swim_prop ~ logConc, family = quasibinomial, weights = total_larvae,
             data = data)
 
-# Compare full vs reduced models, first between non-log transformed and then between log transformed
+# Compare full vs reduced models, with or without log transformed concentration
 anova(mod4swim, mod2swim, test = "Chisq") 
 anova(mod5swim, mod3swim, test = "Chisq") 
 
@@ -395,7 +378,7 @@ scatter.smooth(data$Trial, rstandard(mod3swim, type='deviance'), col='gray')
 
 ```
 
-The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Conc + Trial), so let's look at the response as a function of log-transformed concentration.  
+The residual plots look cleaner for mod3 than for mod2, so let's look at the response as a function of log-transformed concentration.  
 
 ### GLM Prediction Plots
 
@@ -404,11 +387,11 @@ The residual plots look cleaner for mod3 (~ logConc + Trial) than for mod2 (~ Co
 mod3swim_eff <- effect("logConc", mod3swim)
 mod3swim_eff <- as.data.frame(mod3swim_eff)
 
-# Custom ticks and labels
+# Custom ticks and labels (since x-axis is log-transformed)
 custom_ticks <- c(0.000125, 0.5, 1, 10, 25, 50) 
 custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 
-# Plot using ggplot2 with natural log-scaled x-axis, custom ticks, and labels
+# Plot using ggplot2
 swim_plot <- ggplot(mod3swim_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
@@ -424,6 +407,8 @@ swim_plot <- ggplot(mod3swim_eff, aes(x = logConc, y = fit)) +
   ) +
   theme_minimal()
 
+#Model Summary
+summary(mod3swim)
 ```
 
 ### Interpreting results 
@@ -434,18 +419,14 @@ The estimated odds of a larva swimming was unaffected by sediment concentration 
 ### GLM Model Validation
 
 ```{r, echo=TRUE}
-# Start with full, binomial model (log-transformed?)
+# Start with full, binomial model
 mod1dead <- glm(dead_prop ~ Treatment + Trial, family = binomial, weights = total_larvae,
             data = data)
 summary(mod1dead)
 
-# Extract residual deviance
+# Test for Overdispersion
 residual_deviance_dead <- deviance(mod1dead)
-
-# Degrees of freedom
 df_dead <- nrow(model.matrix(mod1dead)) - length(coefficients(mod1dead))
-
-# Compute p-value to test for overdispersion
 p_value_dead <- 1 - pchisq(residual_deviance_dead, df)
 
 # Print results
@@ -467,7 +448,7 @@ mod4dead <- glm(dead_prop ~ Treatment, family = quasibinomial, weights = total_l
 mod5dead <- glm(dead_prop ~ logConc, family = quasibinomial, weights = total_larvae,
             data = data)
 
-# Compare full vs reduced models, first between non-log transformed and then between log transformed
+# Compare full vs reduced models, with and without log-transformed concentration
 anova(mod4dead, mod2dead, test = "Chisq") 
 anova(mod5dead, mod3dead, test = "Chisq") 
 
@@ -481,13 +462,13 @@ par(mfrow=c(2,2))
 scatter.smooth(predict(mod4dead, type='response'), rstandard(mod4dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod4dead), resid(mod4dead, type='working'), col='gray')
 scatter.smooth(data$Treatment, rstandard(mod4dead, type='deviance'), col='gray')
-scatter.smooth(data$Trial, rstandard(mod4dead, type='deviance'), col='gray') #note Trial not in mod5
+scatter.smooth(data$Trial, rstandard(mod4dead, type='deviance'), col='gray') 
 
 #Residual plots for mod5
 scatter.smooth(predict(mod5dead, type='response'), rstandard(mod5dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod5dead), resid(mod5dead, type='working'), col='gray')
 scatter.smooth(data$logConc, rstandard(mod5dead, type='deviance'), col='gray')
-scatter.smooth(data$Trial, rstandard(mod5dead, type='deviance'), col='gray') #note: Trial not in mod5
+scatter.smooth(data$Trial, rstandard(mod5dead, type='deviance'), col='gray') 
 
 #Residual plots for mod3
 scatter.smooth(predict(mod3dead, type='response'), rstandard(mod3dead, type='deviance'), col='gray')
@@ -499,7 +480,7 @@ scatter.smooth(data$Trial, rstandard(mod3dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod2dead, type='response'), rstandard(mod2dead, type='deviance'), col='gray')
 scatter.smooth(predict(mod2dead), resid(mod2dead, type='working'), col='gray')
 scatter.smooth(data$logConc, rstandard(mod2dead, type='deviance'), col='gray')
-scatter.smooth(data$Trial, rstandard(mod2dead, type='deviance'), col='gray') #note: Trial not in mod2
+scatter.smooth(data$Trial, rstandard(mod2dead, type='deviance'), col='gray') 
 
 ```
 
@@ -511,11 +492,11 @@ The residual plots for mod3 look better, and to keep models consistent across re
 mod3dead_eff <- effect("logConc", mod3dead)
 mod3dead_eff <- as.data.frame(mod3dead_eff)
 
-# Custom ticks and labels
+# Custom ticks and labels (since x-axis is log-transformed)
 custom_ticks <- c(0.000125, 0.5, 1, 10, 25, 50)  
 custom_labels <- c("0", "0.5", "1", "10", "25", "50")
 
-# Plot using ggplot2 with natural log-scaled x-axis, custom ticks, and labels
+# Plot using ggplot2
 dead_plot <- ggplot(mod3dead_eff, aes(x = logConc, y = fit)) +
   geom_line() +
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
@@ -530,6 +511,9 @@ dead_plot <- ggplot(mod3dead_eff, aes(x = logConc, y = fit)) +
     labels = function(x) paste0(x*100)
   ) +
   theme_minimal()
+
+# Model summary
+summary(mod3dead)
 
 ```
 
